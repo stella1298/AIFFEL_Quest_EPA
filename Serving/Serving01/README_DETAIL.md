@@ -43,22 +43,22 @@
 ## 2. 시스템 아키텍처
 
 ```mermaid
-flowchart LR
-    U["👤 편집자<br/>(브라우저)"] -->|제목 입력| S["Streamlit<br/>frontend/app.py<br/>:8501"]
-    D["🧪 개발자<br/>Swagger UI /docs"] --> API
-    S -->|"HTTP + X-API-Key<br/>JSON"| API
-
-    subgraph API["FastAPI 서버 · app/main.py · :8000"]
-        direction TB
-        MW["미들웨어<br/>처리 시간 헤더 · 요청 로그"] --> AUTH["인증<br/>auth.py<br/>❌ 401"]
-        AUTH --> VAL["입력 검증<br/>schemas.py (Pydantic)<br/>❌ 422"]
-        VAL --> EP["엔드포인트<br/>/predict · /predict/batch"]
-        EP -->|run_in_executor| POOL["추론 스레드풀<br/>max_workers=2"]
-        POOL --> SVC["model_service.py<br/>추론 + 검토 필요 판정"]
+flowchart TB
+    subgraph C["사용자"]
+        direction LR
+        U["👤 편집자<br/>Streamlit :8501"]
+        D["🧪 개발자<br/>Swagger UI /docs"]
     end
-
-    SVC --> M[("🤗 KLUE-RoBERTa<br/>YNAT 7섹션<br/>safetensors")]
-    HUB["Hugging Face Hub<br/>revision refs/pr/2"] -.->|"서버 시작 시 1회 로드<br/>(lifespan)"| M
+    C -->|"HTTP + X-API-Key · JSON"| API
+    subgraph API["FastAPI 서버 · app/main.py · :8000"]
+        direction LR
+        MW["미들웨어<br/>시간 · 로그"] --> AUTH["인증<br/>auth.py → 401"]
+        AUTH --> VAL["검증<br/>schemas.py → 422"]
+        VAL --> EP["엔드포인트<br/>/predict · /batch"]
+        EP -->|run_in_executor| SVC["model_service.py<br/>추론 + 검토 판정"]
+    end
+    API --> M[("🤗 KLUE-RoBERTa<br/>YNAT 7섹션")]
+    HUB["Hugging Face Hub<br/>revision refs/pr/2"] -.->|"서버 시작 시 1회 로드 (lifespan)"| M
 ```
 
 **요청 한 건의 흐름**
