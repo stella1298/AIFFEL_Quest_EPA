@@ -22,11 +22,14 @@ AIFFEL_Quest_EPA
 │   │   └── README.md
 │   └── NLP05
 │       └── README.md
-└── LLM                 # LLM(Large Language Model) 모듈의 퀘스트
-    ├── LLM01
-    │   └── README.md
-    ├── LLM02
-    │   └── README.md
-    └── LLM03
+├── LLM                 # LLM(Large Language Model) 모듈의 퀘스트
+│   ├── LLM01
+│   │   └── README.md
+│   ├── LLM02
+│   │   └── README.md
+│   └── LLM03
+│       └── README.md
+└── Serving             # 모델 서빙(FastAPI · Streamlit) 모듈의 퀘스트
+    └── Serving01       # 뉴스 섹션 자동 분류 API (D52 자율 프로젝트)
         └── README.md
 ```
