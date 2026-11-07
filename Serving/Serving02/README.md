@@ -66,7 +66,7 @@
 *채점 모드 화면. 이 캡처는 기능 확인용으로 자동 입력한 선 40장의 결과입니다. 사람 손글씨 결과가 아닙니다.*
 
 이 예시에서도 확인할 점이 있었습니다.
-- 깃발 달린 1 세 장을 모델들이 **확신을 갖고** 7 로 읽었습니다.
+- 깃발 달린 1 두 장을 모델들이 **확신을 갖고** 7 로 읽었습니다.
 - 그래서 '확인 필요'에 하나도 걸리지 않았습니다. 이 규칙은 의견이 갈리거나 망설이는 경우만 잡습니다. **확신에 찬 오답**은 잡지 못한다는 한계가 수치로 드러났습니다.
 
 ## 결과
@@ -148,7 +148,7 @@ curl -X POST "http://localhost:8000/v1/predict/file?models=cnn&models=lstm" \
 │   ├── main.py            엔드포인트 · lifespan · 스레드풀 · SSE
 │   ├── inference.py       ONNX / TorchScript / PyTorch 백엔드 · 앙상블
 │   ├── auth.py · rate_limit.py · schemas.py · preprocess.py · middleware.py · errors.py
-│   └── static/index.html  그림판 (자유 그리기 · 내 손글씨 채점)
+│   └── static/index.html  그림판 (한 장씩 보기 · 내 손글씨 채점)
 ├── frontend/          Streamlit 대시보드 (API가 없으면 내장 모드로 직접 띄움)
 ├── tests/             pytest 34개
 ├── scripts/           내 손글씨 다시 채점 · 부하 테스트 · API 키 생성 · Hugging Face 배포
