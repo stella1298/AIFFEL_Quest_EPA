@@ -1,0 +1,59 @@
+학습 60000장 / 테스트 10000장
+
+[logreg] 파라미터 7,850개
+  epoch 1  loss 1.1987  test acc 84.42%
+  epoch 2  loss 1.1061  test acc 83.85%
+  epoch 3  loss 1.0872  test acc 83.72%
+  견고성 : 4px 이동 56.69% / 20도 회전 71.68%
+  형식별 최대 오차 {'torchscript': 0.0, 'onnx': 5.364418029785156e-06}  /  1장 지연(ms) {'pytorch': 0.008, 'torchscript': 0.007, 'onnx': 0.008}
+
+[mlp] 파라미터 235,146개
+  epoch 1  loss 0.6609  test acc 95.41%
+  epoch 2  loss 0.3067  test acc 96.65%
+  epoch 3  loss 0.1846  test acc 96.78%
+  견고성 : 4px 이동 91.60% / 20도 회전 90.00%
+  형식별 최대 오차 {'torchscript': 0.0, 'onnx': 4.76837158203125e-06}  /  1장 지연(ms) {'pytorch': 0.077, 'torchscript': 0.049, 'onnx': 0.017}
+
+[lenet] 파라미터 61,706개
+  epoch 1  loss 0.5393  test acc 97.12%
+  epoch 2  loss 0.1667  test acc 97.74%
+  epoch 3  loss 0.1157  test acc 98.29%
+  견고성 : 4px 이동 95.32% / 20도 회전 93.27%
+  형식별 최대 오차 {'torchscript': 0.0, 'onnx': 3.814697265625e-06}  /  1장 지연(ms) {'pytorch': 0.344, 'torchscript': 0.312, 'onnx': 0.041}
+
+[cnn] 파라미터 421,642개
+  epoch 1  loss 0.4682  test acc 98.11%
+  epoch 2  loss 0.1885  test acc 98.74%
+  epoch 3  loss 0.1091  test acc 99.01%
+  견고성 : 4px 이동 96.97% / 20도 회전 94.64%
+  형식별 최대 오차 {'torchscript': 0.0, 'onnx': 3.814697265625e-06}  /  1장 지연(ms) {'pytorch': 0.211, 'torchscript': 0.182, 'onnx': 0.059}
+
+[lstm] 파라미터 82,186개
+  epoch 1  loss 0.6994  test acc 96.06%
+  epoch 2  loss 0.1816  test acc 97.44%
+  epoch 3  loss 0.1242  test acc 97.89%
+  견고성 : 4px 이동 96.09% / 20도 회전 91.50%
+  형식별 최대 오차 {'torchscript': 0.0, 'onnx': 1.9073486328125e-06}  /  1장 지연(ms) {'pytorch': 0.403, 'torchscript': 0.468, 'onnx': 0.127}
+
+[vit] 파라미터 139,018개
+  epoch 1  loss 1.3234  test acc 88.34%
+  epoch 2  loss 0.5307  test acc 95.18%
+  epoch 3  loss 0.3148  test acc 95.86%
+  견고성 : 4px 이동 90.32% / 20도 회전 88.44%
+  형식별 최대 오차 {'torchscript': 0.0, 'onnx': 2.562999725341797e-06}  /  1장 지연(ms) {'pytorch': 1.027, 'torchscript': 0.762, 'onnx': 0.29}
+
+[앙상블] 저장된 모델 전부의 확률 평균으로 채점 ...
+  {'members': ['logreg', 'mlp', 'lenet', 'cnn', 'lstm', 'vit'], 'test_acc': 0.9887, 'shift4px_acc': 0.9688, 'rotate20_acc': 0.9467}
+
+저장 완료 : C:\EPA1st\model-serving-course\mnist-project\models
+조합 63가지 채점 (원본 / 4px 이동 / 20도 회전)
+  0.9905 / 0.9773 / 0.9554  ['lenet', 'cnn', 'lstm']
+  0.9901 / 0.9706 / 0.9491  ['lenet', 'cnn']
+  0.9901 / 0.9697 / 0.9464  ['cnn']
+  0.9899 / 0.9752 / 0.9502  ['lenet', 'cnn', 'lstm', 'vit']
+  0.9896 / 0.9733 / 0.9526  ['logreg', 'lenet', 'cnn', 'lstm']
+  0.9895 / 0.9771 / 0.9526  ['cnn', 'lstm']
+  0.9895 / 0.9723 / 0.9496  ['mlp', 'lenet', 'cnn', 'lstm']
+  0.9895 / 0.9665 / 0.9474  ['logreg', 'lenet', 'cnn']
+기본 투표 조합 ['lenet', 'cnn', 'lstm'] : {'members': ['lenet', 'cnn', 'lstm'], 'test_acc': 0.9905, 'shift4px_acc': 0.9773, 'rotate20_acc': 0.9554}
+6개 전부 : {'members': ['logreg', 'mlp', 'lenet', 'cnn', 'lstm', 'vit'], 'test_acc': 0.9887, 'shift4px_acc': 0.9688, 'rotate20_acc': 0.9467}

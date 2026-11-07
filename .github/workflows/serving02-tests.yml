@@ -1,0 +1,39 @@
+name: Serving02 tests
+
+on:
+  push:
+    paths: ["Serving/Serving02/**", ".github/workflows/serving02-tests.yml"]
+  pull_request:
+    paths: ["Serving/Serving02/**", ".github/workflows/serving02-tests.yml"]
+  workflow_dispatch:
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Serving/Serving02
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: Serving/Serving02/requirements-dev.txt
+      # 서빙 환경과 같게 torch 없이 설치합니다. 직렬화 형식 비교 테스트(test_formats)는 자동으로 건너뜁니다.
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest -rs
+
+  docker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Serving/Serving02
+    steps:
+      - uses: actions/checkout@v4
+      - name: API 이미지 빌드 후 /ready 확인
+        run: |
+          docker build -t mnist-api .
+          docker run -d --name api -p 8000:8000 mnist-api
+          for i in $(seq 1 30); do curl -sf localhost:8000/ready && exit 0; sleep 2; done
+          docker logs api; exit 1

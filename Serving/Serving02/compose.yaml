@@ -1,0 +1,32 @@
+# 실행 :              docker compose up -d --build
+# 외부 공개(임시 URL) : docker compose --profile public up -d --build  →  docker compose logs tunnel
+services:
+  api:
+    build: { context: ., dockerfile: Dockerfile }
+    image: mnist-serving-api:1.1.0
+    env_file: [{ path: .env, required: false }]
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:${API_PORT:-8000}:8000"
+    restart: unless-stopped
+
+  ui:
+    build: { context: ., dockerfile: Dockerfile.ui }
+    image: mnist-serving-ui:1.1.0
+    env_file: [{ path: .env, required: false }]
+    environment:
+      API_BASE_URL: http://api:8000          # 컨테이너끼리는 서비스 이름으로 부릅니다
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:${UI_PORT:-8501}:8501"
+    depends_on:
+      api: { condition: service_healthy }    # API 가 /ready 를 통과한 뒤에 시작
+    restart: unless-stopped
+
+  # 외부 공개용 : Cloudflare Quick Tunnel. 계정·포트 개방 없이 https://xxxx.trycloudflare.com 주소가 생깁니다
+  # 컨테이너를 내리면 주소도 사라지는 '임시' 주소입니다 (시연·공유용)
+  tunnel:
+    image: cloudflare/cloudflared:2025.10.0
+    profiles: [public]
+    command: tunnel --no-autoupdate --url http://api:8000
+    depends_on:
+      api: { condition: service_healthy }
+    restart: unless-stopped

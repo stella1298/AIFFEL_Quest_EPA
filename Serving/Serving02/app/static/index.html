@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MNIST 그림판</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --ink:#1d2433; --muted:#6b7385; --line:#e3e6ec; --track:#eef0f4;
+          --ok:#1e8e4a; --warn:#b7791f; --err:#c0392b; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#14171d; --card:#1c2029; --ink:#e7eaf0; --muted:#9aa3b5; --line:#2c3240; --track:#2a2f3b;
+            --ok:#4cc27e; --warn:#e3b04b; --err:#ef6b5b; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family: system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; }
+  main { max-width:1180px; margin:0 auto; padding:24px 16px 40px; }
+  header { display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0; font-size:14px; }
+  .links a { color:var(--muted); font-size:13px; margin-left:12px; }
+  .grid { display:grid; grid-template-columns: 312px 1fr; gap:16px; align-items:start; }
+  @media (max-width:820px){ .grid { grid-template-columns:1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  canvas#pad { width:100%; max-width:280px; aspect-ratio:1; background:#000; border-radius:8px; touch-action:none; cursor:crosshair; display:block; margin:0 auto; }
+  .row { display:flex; gap:8px; margin-top:12px; align-items:center; flex-wrap:wrap; }
+  button { border:1px solid var(--line); background:var(--card); color:var(--ink); padding:8px 14px; border-radius:8px; font-size:14px; cursor:pointer; }
+  button.primary { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  label.chk { font-size:13px; color:var(--muted); display:flex; gap:6px; align-items:center; }
+  .section-title { font-size:12px; color:var(--muted); margin:14px 0 6px; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { font-size:12px; display:flex; align-items:center; gap:5px; padding:4px 8px; border:1px solid var(--line); border-radius:999px; cursor:pointer; user-select:none; }
+  .chip i { width:9px; height:9px; border-radius:50%; display:inline-block; }
+  .chip input { margin:0; }
+  .key input { width:100%; padding:7px 9px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--ink); font-family:monospace; }
+  .preview { display:flex; gap:12px; align-items:center; margin-top:14px; font-size:12px; color:var(--muted); }
+  .preview img, .preview .ph { width:84px; height:84px; image-rendering:pixelated; border-radius:6px; background:#000; flex:none; }
+  .verdict { padding:12px 14px; border-radius:12px; margin-bottom:12px; border:1px solid var(--line); background:var(--card); display:grid; grid-template-columns:auto 1fr; gap:4px 16px; align-items:center; min-height:72px; }
+  .verdict .final { font-size:44px; font-weight:700; line-height:1; grid-row:span 2; font-variant-numeric:tabular-nums; min-width:36px; text-align:center; }
+  .verdict .msg { font-size:14px; }
+  .verdict .votes { font-size:12px; color:var(--muted); }
+  .verdict.ok { border-color:var(--ok); } .verdict.ok .msg { color:var(--ok); }
+  .verdict.warn { border-color:var(--warn); } .verdict.warn .msg { color:var(--warn); }
+  .verdict.err { border-color:var(--err); } .verdict.err .msg { color:var(--err); }
+  .models { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+  @media (max-width:1060px){ .models { grid-template-columns:repeat(2, 1fr); } }
+  @media (max-width:520px){ .models { grid-template-columns:1fr; } }
+  .model.off { opacity:.35; }
+  .model h2 { font-size:14px; margin:0; display:flex; justify-content:space-between; gap:6px; }
+  .model h2 span { font-size:11px; color:var(--muted); font-weight:400; }
+  .meta { font-size:11px; color:var(--muted); min-height:15px; margin-top:2px; }
+  .head { display:flex; align-items:baseline; gap:10px; margin:4px 0 6px; }
+  .big { font-size:38px; font-weight:700; line-height:1.1; font-variant-numeric:tabular-nums; }
+  .conf { font-size:12px; color:var(--muted); }
+  .dissent { font-size:11px; font-weight:600; color:var(--warn); }
+  .role { font-size:10px; font-weight:600; padding:1px 6px; border-radius:999px; border:1px solid currentColor; margin-left:6px; vertical-align:middle; }
+  .role.vote { color:var(--ink); } .role.ref { color:var(--muted); font-weight:400; }
+  .bar { display:grid; grid-template-columns:10px 1fr 40px; gap:5px; align-items:center; font-size:11px; margin:2px 0; font-variant-numeric:tabular-nums; }
+  .bar .track { background:var(--track); height:7px; border-radius:4px; overflow:hidden; }
+  .bar .fill { height:100%; width:0; transition:width .2s; }
+  .bar b { color:var(--muted); font-weight:600; } .bar.top b { color:var(--ink); }
+  footer { margin-top:14px; font-size:12px; color:var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>손글씨 숫자 인식 · 모델 6개 비교</h1>
+      <p class="sub">검은 칸에 0~9 숫자 하나를 크게 그리세요. 생각하는 방식이 다른 여섯 모델이 동시에 판단하고, <b>투표</b> 표시가 붙은 모델들의 확률을 평균해 최종 답을 냅니다.</p>
+    </div>
+    <nav class="links"><a href="/docs" target="_blank">API 문서(Swagger)</a><a href="/v1/models" target="_blank">모델 정보</a></nav>
+  </header>
+  <div class="grid">
+    <section class="card">
+      <canvas id="pad" width="280" height="280" aria-label="숫자를 그리는 칸"></canvas>
+      <div class="row">
+        <button id="clear">지우기</button>
+        <button id="go" class="primary">예측</button>
+        <label class="chk"><input type="checkbox" id="auto" checked> 손을 떼면 자동 예측</label>
+      </div>
+      <div class="section-title">참여할 모델</div>
+      <div class="chips" id="chips"></div>
+      <div class="section-title">API 키 (X-API-Key)</div>
+      <div class="key"><input id="apikey" type="password" autocomplete="off" placeholder="키를 입력하세요"></div>
+      <div class="preview"><img id="prev" alt="" hidden><div class="ph" id="ph"></div>
+        <span>모델이 실제로 보는 28×28 입력<br>글씨만 잘라 20px 에 맞추고 무게중심을 가운데로 옮깁니다 (MNIST 와 같은 방식)</span></div>
+    </section>
+    <section>
+      <div class="verdict" id="verdict"><div class="final" id="final">–</div><div class="msg" id="vmsg">숫자를 그리면 결과가 여기에 나옵니다.</div><div class="votes" id="votes">&nbsp;</div></div>
+      <div class="models" id="models"></div>
+      <footer id="foot"></footer>
+    </section>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const pad = $('pad'), ctx = pad.getContext('2d');
+let MODELS = [], INFO = {}, MEMBERS = [], drawing = false, dirty = false, busy = false, cfg = { review_threshold: 0.7, min_agreement: 0.66 };
+
+function resetPad(){ ctx.fillStyle = '#000'; ctx.fillRect(0, 0, pad.width, pad.height);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 18; }
+resetPad();
+function pos(e){ const r = pad.getBoundingClientRect(); return [(e.clientX - r.left) * pad.width / r.width, (e.clientY - r.top) * pad.height / r.height]; }
+pad.addEventListener('pointerdown', e => { drawing = true; dirty = true; pad.setPointerCapture(e.pointerId);
+  const [x, y] = pos(e); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 0.1, y); ctx.stroke(); });
+pad.addEventListener('pointermove', e => { if (!drawing) return; const [x, y] = pos(e); ctx.lineTo(x, y); ctx.stroke(); });
+['pointerup', 'pointercancel'].forEach(t => pad.addEventListener(t, () => { if (!drawing) return; drawing = false; if ($('auto').checked) predict(); }));
+
+function buildModels(){
+  const chips = $('chips'), box = $('models'); chips.innerHTML = ''; box.innerHTML = '';
+  for (const id of MODELS) { const m = INFO[id];
+    chips.insertAdjacentHTML('beforeend', `<label class="chip"><input type="checkbox" data-model="${id}" checked><i style="background:${m.color}"></i>${m.name}</label>`);
+    let bars = ''; for (let i = 0; i < 10; i++) bars += `<div class="bar" id="row-${id}-${i}"><b>${i}</b><div class="track"><div class="fill" id="f-${id}-${i}" style="background:${m.color}"></div></div><span id="p-${id}-${i}">0.0%</span></div>`;
+    const acc = m.test_acc != null ? `테스트 ${(m.test_acc * 100).toFixed(2)}% · 4px 이동 ${(m.shift4px_acc * 100).toFixed(1)}% · 파라미터 ${m.params.toLocaleString()}` : '';
+    box.insertAdjacentHTML('beforeend', `<div class="card model" id="card-${id}" title="${m.description}">
+      <h2 style="color:${m.color}"><div>${m.name}${MEMBERS.includes(id) ? '<span class="role vote" title="최종 답 투표에 참여">투표</span>' : '<span class="role ref" title="결과만 함께 보여 줌">참고</span>'}</div><span>${m.family}</span></h2><div class="meta">${acc}</div>
+      <div class="head"><div class="big" id="pred-${id}">–</div><div><div class="conf" id="conf-${id}">&nbsp;</div><div class="dissent" id="dis-${id}"></div></div></div>${bars}</div>`); }
+  chips.addEventListener('change', () => { for (const id of MODELS) $('card-' + id).classList.toggle('off', !selected().includes(id)); if (dirty) predict(); });
+}
+const selected = () => [...document.querySelectorAll('#chips input:checked')].map(x => x.dataset.model);
+
+function setVerdict(cls, final, msg, votes){ $('verdict').className = 'verdict ' + cls; $('final').textContent = final; $('vmsg').textContent = msg; $('votes').innerHTML = votes || '&nbsp;'; }
+function clearCard(id){ $('pred-' + id).textContent = '–'; $('conf-' + id).innerHTML = '&nbsp;'; $('dis-' + id).textContent = '';
+  for (let i = 0; i < 10; i++) { $(`f-${id}-${i}`).style.width = '0'; $(`p-${id}-${i}`).textContent = '0.0%'; $(`row-${id}-${i}`).classList.remove('top'); } }
+function clearAll(){ resetPad(); dirty = false; $('prev').hidden = true; $('ph').hidden = false; MODELS.forEach(clearCard);
+  setVerdict('', '–', '숫자를 그리면 결과가 여기에 나옵니다.'); $('foot').textContent = ''; }
+$('clear').onclick = clearAll;
+$('go').onclick = predict;
+$('apikey').addEventListener('change', () => { try { localStorage.setItem('mnist_api_key', $('apikey').value); } catch (e) {} });
+
+const MESSAGES = { 401: '🔑 API 키를 확인해 주세요.', 429: '⏳ 요청이 너무 많습니다.', 503: '⏳ 서버가 바쁘거나 모델을 불러오는 중입니다.' };
+
+async function predict(){
+  if (!dirty || busy) return;
+  const models = selected();
+  if (!models.length) { setVerdict('err', '–', '참여할 모델을 하나 이상 고르세요.'); return; }
+  busy = true;
+  try {
+    const r = await fetch('/v1/predict', { method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': $('apikey').value },
+      body: JSON.stringify({ image: pad.toDataURL('image/png'), models }) });
+    const d = await r.json();
+    if (!r.ok) { setVerdict('err', '!', `${MESSAGES[r.status] || '❌'} ${d.error?.message || '오류가 발생했습니다.'} (HTTP ${r.status})`); return; }
+    $('prev').src = d.preview; $('prev').hidden = false; $('ph').hidden = true;
+    const e = d.ensemble;
+    for (const id of MODELS) { const res = d.results[id]; clearCard(id); if (!res) continue;
+      $('pred-' + id).textContent = res.pred;
+      $('conf-' + id).textContent = `확률 ${(res.confidence * 100).toFixed(1)}% · ${res.infer_ms.toFixed(2)}ms`;
+      $('dis-' + id).textContent = res.pred !== e.pred ? '최종 답과 다름' : '';
+      res.probs.forEach((p, i) => { $(`f-${id}-${i}`).style.width = (p * 100) + '%'; $(`p-${id}-${i}`).textContent = (p * 100).toFixed(1) + '%';
+        $(`row-${id}-${i}`).classList.toggle('top', i === res.pred); }); }
+    const n = e.members.length, agreeN = Math.round(e.agreement * n);
+    const names = e.members.map(k => INFO[k].name).join('·');
+    const refs = Object.keys(d.results).filter(k => !e.members.includes(k));
+    const refAgree = refs.filter(k => d.results[k].pred === e.pred).length;
+    const votes = `투표 (${names}) : ` + Object.entries(e.votes).map(([k, v]) => `<b>${k}</b> ${v}표`).join(' · ')
+      + ` · 평균 확률 ${(e.confidence * 100).toFixed(1)}%` + (refs.length ? ` · 참고 모델 ${refs.length}개 중 ${refAgree}개 같은 답` : '');
+    if (!d.needs_review) setVerdict('ok', e.pred, `✅ 투표 모델 ${n}개 중 ${agreeN}개가 같은 답을 냈고 평균 확률도 충분합니다.`, votes);
+    else if (e.agreement < cfg.min_agreement) setVerdict('warn', e.pred, `⚠️ 투표 모델의 의견이 갈렸습니다 (${n}개 중 ${agreeN}개만 동의). 사람이 확인할 대상입니다.`, votes);
+    else setVerdict('warn', e.pred, `⚠️ 평균 확률이 ${(cfg.review_threshold * 100).toFixed(0)}% 미만입니다. 사람이 확인할 대상입니다.`, votes);
+    $('foot').textContent = `요청 ID ${d.request_id} · 사용자 ${d.user} · 형식 ${d.backend} · 모델 버전 ${d.model_version} · 서버 처리 ${r.headers.get('X-Process-Time-ms')}ms`;
+  } catch (err) { setVerdict('err', '!', '🔌 서버에 연결할 수 없습니다.'); }
+  finally { busy = false; }
+}
+
+(async () => {
+  let saved = null; try { saved = localStorage.getItem('mnist_api_key'); } catch (e) {}
+  try { cfg = await (await fetch('/ui-config')).json(); $('apikey').value = saved || cfg.demo_key || ''; } catch (e) { $('apikey').value = saved || ''; }
+  try { const m = await (await fetch('/v1/models')).json(); MODELS = m.enabled; INFO = m.models; MEMBERS = m.ensemble_members || []; buildModels(); }
+  catch (e) { setVerdict('err', '!', '🔌 모델 목록을 가져오지 못했습니다.'); }
+})();
+</script>
+</body>
+</html>

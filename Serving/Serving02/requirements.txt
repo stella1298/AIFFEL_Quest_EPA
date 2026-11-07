@@ -1,0 +1,8 @@
+# ===== API 서버 (서빙) : torch 없이 onnxruntime 만으로 추론합니다 =====
+fastapi==0.141.1
+uvicorn==0.53.0
+pydantic==2.14.1
+python-multipart==0.0.32
+onnxruntime==1.31.1
+numpy==2.5.4
+pillow==12.3.0

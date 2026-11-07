@@ -1,0 +1,13 @@
+# ===== Streamlit Community Cloud 용 (xxx.streamlit.app) =====
+# Cloud 는 실행 파일(frontend/streamlit_app.py)과 같은 폴더의 requirements.txt 를 먼저 찾습니다.
+# 화면 + 내장 API(FastAPI·ONNX Runtime)를 한 앱에서 돌리므로 두 목록을 합쳤습니다. torch 는 필요 없습니다.
+streamlit==1.66.1
+requests==2.34.2
+pandas==3.1.0
+numpy==2.5.4
+pillow==12.3.0
+fastapi==0.141.1
+uvicorn==0.53.0
+pydantic==2.14.1
+python-multipart==0.0.32
+onnxruntime==1.31.1

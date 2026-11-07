@@ -30,6 +30,8 @@ AIFFEL_Quest_EPA
 │   └── LLM03
 │       └── README.md
 └── Serving             # 모델 서빙(FastAPI · Streamlit) 모듈의 퀘스트
-    └── Serving01       # 뉴스 섹션 자동 분류 API (D52 자율 프로젝트)
+    ├── Serving01       # 뉴스 섹션 자동 분류 API (D52 자율 프로젝트)
+    │   └── README.md
+    └── Serving02       # MNIST 손글씨 인식 — 모델 6개 비교 + 앙상블 서빙
         └── README.md
 ```

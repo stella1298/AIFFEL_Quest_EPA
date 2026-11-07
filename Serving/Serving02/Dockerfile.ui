@@ -1,0 +1,12 @@
+# ===== Streamlit 대시보드 이미지 =====
+FROM python:3.12-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+WORKDIR /app
+COPY requirements-ui.txt .
+RUN pip install --no-cache-dir -r requirements-ui.txt
+COPY samples/ ./samples/
+COPY frontend/ ./frontend/
+RUN useradd --create-home --uid 1000 appuser
+USER appuser
+EXPOSE 8501
+CMD ["streamlit", "run", "frontend/streamlit_app.py", "--server.address=0.0.0.0", "--server.port=8501", "--server.headless=true", "--browser.gatherUsageStats=false"]

@@ -1,0 +1,22 @@
+# 비밀 정보
+.env
+
+# 파이썬
+__pycache__/
+*.pyc
+.venv*/
+.pytest_cache/
+
+# 학습 데이터 (torchvision 이 내려받는 MNIST 원본, 약 55MB)
+data/
+
+# 모델 : 작아서(합계 약 8MB) 저장소에 함께 올립니다. 그래야 clone 만으로 바로 서빙됩니다
+# 큰 모델로 바꾸면 아래 주석을 풀고 Git LFS 나 허깅페이스 허브로 옮기세요
+# models/*.pth
+# models/*.pt
+
+# 기타
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+*.log

@@ -1,0 +1,411 @@
+{
+  "models": {
+    "logreg": {
+      "params": 7850,
+      "epochs": 3,
+      "train_sec": 20.5,
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 1.1987,
+          "test_acc": 0.8442
+        },
+        {
+          "epoch": 2,
+          "loss": 1.1061,
+          "test_acc": 0.8385
+        },
+        {
+          "epoch": 3,
+          "loss": 1.0872,
+          "test_acc": 0.8372
+        }
+      ],
+      "test_acc": 0.8372,
+      "shift4px_acc": 0.5669,
+      "rotate20_acc": 0.7168,
+      "files": {
+        "pth": "mnist_logreg.pth",
+        "pt": "mnist_logreg.pt",
+        "onnx": "mnist_logreg.onnx"
+      },
+      "file_bytes": {
+        "pth": 33357,
+        "pt": 37972,
+        "onnx": 34967
+      },
+      "max_abs_diff": {
+        "torchscript": 0.0,
+        "onnx": 5.364418029785156e-06
+      },
+      "same_prediction": {
+        "torchscript": true,
+        "onnx": true
+      },
+      "latency_ms": {
+        "pytorch": 0.008,
+        "torchscript": 0.007,
+        "onnx": 0.008
+      }
+    },
+    "mlp": {
+      "params": 235146,
+      "epochs": 3,
+      "train_sec": 24.6,
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 0.6609,
+          "test_acc": 0.9541
+        },
+        {
+          "epoch": 2,
+          "loss": 0.3067,
+          "test_acc": 0.9665
+        },
+        {
+          "epoch": 3,
+          "loss": 0.1846,
+          "test_acc": 0.9678
+        }
+      ],
+      "test_acc": 0.9678,
+      "shift4px_acc": 0.916,
+      "rotate20_acc": 0.9,
+      "files": {
+        "pth": "mnist_mlp.pth",
+        "pt": "mnist_mlp.pt",
+        "onnx": "mnist_mlp.onnx"
+      },
+      "file_bytes": {
+        "pth": 943725,
+        "pt": 956531,
+        "onnx": 949727
+      },
+      "max_abs_diff": {
+        "torchscript": 0.0,
+        "onnx": 4.76837158203125e-06
+      },
+      "same_prediction": {
+        "torchscript": true,
+        "onnx": true
+      },
+      "latency_ms": {
+        "pytorch": 0.077,
+        "torchscript": 0.049,
+        "onnx": 0.017
+      }
+    },
+    "lenet": {
+      "params": 61706,
+      "epochs": 3,
+      "train_sec": 103.1,
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 0.5393,
+          "test_acc": 0.9712
+        },
+        {
+          "epoch": 2,
+          "loss": 0.1667,
+          "test_acc": 0.9774
+        },
+        {
+          "epoch": 3,
+          "loss": 0.1157,
+          "test_acc": 0.9829
+        }
+      ],
+      "test_acc": 0.9829,
+      "shift4px_acc": 0.9532,
+      "rotate20_acc": 0.9327,
+      "files": {
+        "pth": "mnist_lenet.pth",
+        "pt": "mnist_lenet.pt",
+        "onnx": "mnist_lenet.onnx"
+      },
+      "file_bytes": {
+        "pth": 251141,
+        "pt": 271517,
+        "onnx": 265046
+      },
+      "max_abs_diff": {
+        "torchscript": 0.0,
+        "onnx": 3.814697265625e-06
+      },
+      "same_prediction": {
+        "torchscript": true,
+        "onnx": true
+      },
+      "latency_ms": {
+        "pytorch": 0.344,
+        "torchscript": 0.312,
+        "onnx": 0.041
+      }
+    },
+    "cnn": {
+      "params": 421642,
+      "epochs": 3,
+      "train_sec": 64.1,
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 0.4682,
+          "test_acc": 0.9811
+        },
+        {
+          "epoch": 2,
+          "loss": 0.1885,
+          "test_acc": 0.9874
+        },
+        {
+          "epoch": 3,
+          "loss": 0.1091,
+          "test_acc": 0.9901
+        }
+      ],
+      "test_acc": 0.9901,
+      "shift4px_acc": 0.9697,
+      "rotate20_acc": 0.9464,
+      "files": {
+        "pth": "mnist_cnn.pth",
+        "pt": "mnist_cnn.pt",
+        "onnx": "mnist_cnn.onnx"
+      },
+      "file_bytes": {
+        "pth": 1690409,
+        "pt": 1709527,
+        "onnx": 1702000
+      },
+      "max_abs_diff": {
+        "torchscript": 0.0,
+        "onnx": 3.814697265625e-06
+      },
+      "same_prediction": {
+        "torchscript": true,
+        "onnx": true
+      },
+      "latency_ms": {
+        "pytorch": 0.211,
+        "torchscript": 0.182,
+        "onnx": 0.059
+      }
+    },
+    "lstm": {
+      "params": 82186,
+      "epochs": 3,
+      "train_sec": 41.9,
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 0.6994,
+          "test_acc": 0.9606
+        },
+        {
+          "epoch": 2,
+          "loss": 0.1816,
+          "test_acc": 0.9744
+        },
+        {
+          "epoch": 3,
+          "loss": 0.1242,
+          "test_acc": 0.9789
+        }
+      ],
+      "test_acc": 0.9789,
+      "shift4px_acc": 0.9609,
+      "rotate20_acc": 0.915,
+      "files": {
+        "pth": "mnist_lstm.pth",
+        "pt": "mnist_lstm.pt",
+        "onnx": "mnist_lstm.onnx"
+      },
+      "file_bytes": {
+        "pth": 331769,
+        "pt": 336696,
+        "onnx": 360658
+      },
+      "max_abs_diff": {
+        "torchscript": 0.0,
+        "onnx": 1.9073486328125e-06
+      },
+      "same_prediction": {
+        "torchscript": true,
+        "onnx": true
+      },
+      "latency_ms": {
+        "pytorch": 0.403,
+        "torchscript": 0.468,
+        "onnx": 0.127
+      }
+    },
+    "vit": {
+      "params": 139018,
+      "epochs": 3,
+      "train_sec": 119.6,
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 1.3234,
+          "test_acc": 0.8834
+        },
+        {
+          "epoch": 2,
+          "loss": 0.5307,
+          "test_acc": 0.9518
+        },
+        {
+          "epoch": 3,
+          "loss": 0.3148,
+          "test_acc": 0.9586
+        }
+      ],
+      "test_acc": 0.9586,
+      "shift4px_acc": 0.9032,
+      "rotate20_acc": 0.8844,
+      "files": {
+        "pth": "mnist_vit.pth",
+        "pt": "mnist_vit.pt",
+        "onnx": "mnist_vit.onnx"
+      },
+      "file_bytes": {
+        "pth": 575159,
+        "pt": 654002,
+        "onnx": 747044
+      },
+      "max_abs_diff": {
+        "torchscript": 0.0,
+        "onnx": 2.562999725341797e-06
+      },
+      "same_prediction": {
+        "torchscript": true,
+        "onnx": true
+      },
+      "latency_ms": {
+        "pytorch": 1.027,
+        "torchscript": 0.762,
+        "onnx": 0.29
+      }
+    }
+  },
+  "trained_at": "2026-11-06 22:56:31",
+  "environment": {
+    "python": "3.12.10",
+    "torch": "2.14.1+cpu",
+    "onnxruntime": "1.31.1",
+    "cpu": "Intel64 Family 6 Model 197 Stepping 2, GenuineIntel"
+  },
+  "preprocess": {
+    "mean": 0.1307,
+    "std": 0.3081
+  },
+  "ensemble": {
+    "members": [
+      "lenet",
+      "cnn",
+      "lstm"
+    ],
+    "test_acc": 0.9905,
+    "shift4px_acc": 0.9773,
+    "rotate20_acc": 0.9554
+  },
+  "ensemble_all": {
+    "members": [
+      "logreg",
+      "mlp",
+      "lenet",
+      "cnn",
+      "lstm",
+      "vit"
+    ],
+    "test_acc": 0.9887,
+    "shift4px_acc": 0.9688,
+    "rotate20_acc": 0.9467
+  },
+  "ensemble_search": {
+    "combinations": 63,
+    "top": [
+      {
+        "members": [
+          "lenet",
+          "cnn",
+          "lstm"
+        ],
+        "test_acc": 0.9905,
+        "shift4px_acc": 0.9773,
+        "rotate20_acc": 0.9554
+      },
+      {
+        "members": [
+          "lenet",
+          "cnn"
+        ],
+        "test_acc": 0.9901,
+        "shift4px_acc": 0.9706,
+        "rotate20_acc": 0.9491
+      },
+      {
+        "members": [
+          "cnn"
+        ],
+        "test_acc": 0.9901,
+        "shift4px_acc": 0.9697,
+        "rotate20_acc": 0.9464
+      },
+      {
+        "members": [
+          "lenet",
+          "cnn",
+          "lstm",
+          "vit"
+        ],
+        "test_acc": 0.9899,
+        "shift4px_acc": 0.9752,
+        "rotate20_acc": 0.9502
+      },
+      {
+        "members": [
+          "logreg",
+          "lenet",
+          "cnn",
+          "lstm"
+        ],
+        "test_acc": 0.9896,
+        "shift4px_acc": 0.9733,
+        "rotate20_acc": 0.9526
+      },
+      {
+        "members": [
+          "cnn",
+          "lstm"
+        ],
+        "test_acc": 0.9895,
+        "shift4px_acc": 0.9771,
+        "rotate20_acc": 0.9526
+      },
+      {
+        "members": [
+          "mlp",
+          "lenet",
+          "cnn",
+          "lstm"
+        ],
+        "test_acc": 0.9895,
+        "shift4px_acc": 0.9723,
+        "rotate20_acc": 0.9496
+      },
+      {
+        "members": [
+          "logreg",
+          "lenet",
+          "cnn"
+        ],
+        "test_acc": 0.9895,
+        "shift4px_acc": 0.9665,
+        "rotate20_acc": 0.9474
+      }
+    ],
+    "note": "테스트셋으로 고른 조합이라 점수가 약간 낙관적입니다"
+  }
+}
