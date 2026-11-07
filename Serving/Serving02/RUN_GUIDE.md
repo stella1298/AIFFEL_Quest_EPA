@@ -6,6 +6,7 @@
 |---|---|---|---|
 | 내 PC 에서 코드 고치며 실행 | [1. 로컬 파이썬](#1-로컬-파이썬으로-실행) | localhost | 2분 |
 | 모델을 켜고 끄거나 투표 모델 바꾸기 | [1-1. 모델 설정](#1-1-모델-켜고-끄기--투표-모델-바꾸기) | — | 1분 |
+| **내 손글씨로 모델 채점** | [1-2. 내 손글씨 채점](#1-2-내-손글씨로-모델-채점하기) | `localhost:8000/#score` | 5분 |
 | 내 PC 에서 운영처럼 실행 | [2. Docker](#2-docker-로-실행) | localhost | 3분 (첫 빌드) |
 | 발표·공유용 **임시 공개 주소** | [3-2. Cloudflare 터널](#3-2-임시-공개-주소-cloudflare-quick-tunnel) | `https://xxxx.trycloudflare.com` | 1분 |
 | 같은 와이파이의 휴대폰으로 | [3-1. 같은 네트워크](#3-1-같은-네트워크의-다른-기기에서) | `http://내PC IP:8000` | 2분 |
@@ -23,13 +24,11 @@
 모델 6개의 파일(`models/*.onnx`)이 저장소에 들어 있어서 **학습하지 않아도 바로 서빙**됩니다.
 
 ```bash
-cd mnist-project
+cd Serving/Serving02
 python -m venv .venv
 # Windows : .venv\Scripts\activate      macOS·Linux·WSL : source .venv/bin/activate
 pip install -r requirements.txt -r requirements-ui.txt
 ```
-
-> model-serving-course 폴더 안이라면 이미 만든 `..\.venv312` 를 그대로 써도 됩니다 (예 : `..\.venv312\Scripts\python -m uvicorn ...`).
 
 **터미널 1 — API + 그림판**
 ```bash
@@ -38,6 +37,7 @@ uvicorn app.main:app --port 8000
 → 로그에 `모델 로드 : logreg … vit` 6줄과 `모델 로드 완료` 가 보이면 준비 끝
 - 그림판 : http://localhost:8000
 - API 문서 : http://localhost:8000/docs
+- 내 손글씨 채점 : http://localhost:8000/#score (아래 1-2)
 
 **터미널 2 — Streamlit 대시보드 (선택)**
 ```bash
@@ -72,6 +72,18 @@ ENABLED_MODELS=lenet,cnn ENSEMBLE_MODELS=lenet,cnn uvicorn app.main:app --port 8
   - 이때 투표 모델이 하나도 안 끼어 있으면, 고른 모델 전부가 투표합니다.
 - 그림판의 '참여할 모델' 체크박스와 대시보드 사이드바가 이 기능을 씁니다.
 
+### 1-2. 내 손글씨로 모델 채점하기
+1. 그림판 위쪽의 **내 손글씨 채점** 을 누릅니다 (또는 `http://localhost:8000/#score`).
+2. 화면에 나온 숫자를 그리고 **기록하고 다음** (Enter) 을 누릅니다. 마음에 안 들게 그렸으면 **지우기**, 넘기려면 **건너뛰기**를 누릅니다.
+3. 오른쪽 채점표에 모델별 정확도와 MNIST 정확도의 차이, 자동 처리·정답·걸러 낸 비율이 쌓입니다. **30장 이상** 모으는 것을 권합니다(0~9 각 3장).
+4. **결과 내려받기** 로 JSON 을 저장합니다. 기록은 이 브라우저에만 남고 서버에는 저장되지 않습니다.
+
+모델을 다시 학습하거나 바꾼 뒤에는 같은 손글씨로 전후를 비교합니다.
+```bash
+python scripts/score_my_digits.py my_digits_2026-11-07.json --api http://localhost:8000 --key dev-admin-key
+python scripts/score_my_digits.py my_digits_2026-11-07.json --npz my_digits.npz    # 학습·분석용 배열로 저장
+```
+
 ### 다시 학습하기 (선택)
 ```bash
 pip install -r requirements-train.txt --extra-index-url https://download.pytorch.org/whl/cpu
@@ -94,7 +106,7 @@ python -m training.ensemble_eval                     # 앙상블 조합 63가지
 Docker Desktop, 또는 WSL 안의 Docker Engine 이면 됩니다.
 
 ```bash
-cd mnist-project                      # WSL 이면 /mnt/c/EPA1st/model-serving-course/mnist-project
+cd Serving/Serving02                  # WSL 이면 /mnt/c/... 아래의 같은 폴더
 cp .env.example .env
 docker compose up -d --build
 docker compose ps                     # api 가 (healthy) 가 되면 준비 끝
@@ -238,13 +250,14 @@ Docker 형식 Space 는 이 프로젝트의 `Dockerfile` 을 그대로 빌드합
 
 ```bash
 pip install -r requirements-dev.txt
-python -m pytest                      # 30개. 서버를 따로 띄우지 않아도 됩니다 (TestClient)
+python -m pytest                      # 34개 (torch 없으면 28개). 서버를 따로 띄우지 않아도 됩니다 (TestClient)
 ```
 
 - **API 테스트** (`tests/test_api.py`)
   - 정상(200), 인증(401), 검증(422), 이미지 검사(400·413·415), 속도 제한(429)
   - 앙상블 규칙(확률 평균·투표 모델·확인 필요), 모델 일부 선택
   - 일괄 분류, 스트리밍, 흰 배경 사진 반전, 전처리 회귀
+- **내 손글씨 테스트** (`tests/test_my_digits.py`) : 채점 모드 화면, 내려받은 파일 읽기, 서버로 다시 채점
 - **형식 테스트** (`tests/test_formats.py`) : 6개 모델 각각 세 형식이 같은 답을 내는지 확인합니다. torch 가 없는 환경에서는 건너뜁니다.
 
 **부하 테스트** (서버가 떠 있어야 합니다)

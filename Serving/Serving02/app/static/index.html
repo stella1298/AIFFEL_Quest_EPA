@@ -59,6 +59,40 @@
   .bar .fill { height:100%; width:0; transition:width .2s; }
   .bar b { color:var(--muted); font-weight:600; } .bar.top b { color:var(--ink); }
   footer { margin-top:14px; font-size:12px; color:var(--muted); }
+  /* 채점 모드 */
+  .modes { display:flex; margin-bottom:10px; }
+  .modes button { flex:1; border-radius:0; font-size:13px; padding:7px 8px; }
+  .modes button:first-child { border-radius:8px 0 0 8px; } .modes button:last-child { border-radius:0 8px 8px 0; border-left:0; }
+  .modes button.on { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  .target { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:13px; color:var(--muted); }
+  .target b { font-size:30px; color:var(--ink); margin-left:6px; vertical-align:middle; }
+  .target .hit { font-weight:600; } .target .hit.ok { color:var(--ok); } .target .hit.no { color:var(--err); }
+  button:disabled { opacity:.4; cursor:default; }
+  .chips.locked { opacity:.5; pointer-events:none; }
+  .score { margin-bottom:12px; }
+  .score h3 { font-size:15px; margin:0 0 2px; display:flex; justify-content:space-between; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .score h3 span { font-size:12px; color:var(--muted); font-weight:400; }
+  .score .note { font-size:12px; color:var(--muted); margin:2px 0 10px; }
+  .score table { width:100%; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums; }
+  .score th { font-size:11px; color:var(--muted); font-weight:500; text-align:right; padding:3px 6px; border-bottom:1px solid var(--line); }
+  .score th:first-child, .score td:first-child { text-align:left; }
+  .score td { padding:4px 6px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap; }
+  .score tr.ens td { font-weight:700; }
+  .score .mini { display:inline-block; width:60px; height:6px; background:var(--track); border-radius:3px; overflow:hidden; vertical-align:middle; margin-right:6px; }
+  .score .mini i { display:block; height:100%; }
+  .score .down { color:var(--err); } .score .up { color:var(--ok); }
+  .kpis { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin:12px 0; }
+  @media (max-width:520px){ .kpis { grid-template-columns:1fr; } .score .mini { display:none; } }
+  .kpi { border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:12px; color:var(--muted); }
+  .kpi b { display:block; font-size:20px; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .digits { display:grid; grid-template-columns:repeat(10, 1fr); gap:4px; font-size:11px; text-align:center; color:var(--muted); }
+  .digits div { border:1px solid var(--line); border-radius:6px; padding:4px 0; }
+  .digits b { display:block; font-size:15px; color:var(--ink); }
+  .digits .weak { border-color:var(--err); }
+  .gallery { display:flex; flex-wrap:wrap; gap:8px; }
+  .gallery figure { margin:0; font-size:11px; text-align:center; color:var(--muted); }
+  .gallery img { width:56px; height:56px; image-rendering:pixelated; border-radius:4px; background:#000; display:block; }
+  .gallery .flag { color:var(--warn); }
 </style>
 </head>
 <body>
@@ -72,11 +106,17 @@
   </header>
   <div class="grid">
     <section class="card">
+      <div class="modes" role="tablist"><button id="m-free" class="on" role="tab">자유 그리기</button><button id="m-score" role="tab">내 손글씨 채점</button></div>
+      <div class="target" id="target" hidden><span>이 숫자를 그려 보세요<b id="tdigit">–</b></span><span class="hit" id="thit"></span></div>
       <canvas id="pad" width="280" height="280" aria-label="숫자를 그리는 칸"></canvas>
       <div class="row">
         <button id="clear">지우기</button>
         <button id="go" class="primary">예측</button>
         <label class="chk"><input type="checkbox" id="auto" checked> 손을 떼면 자동 예측</label>
+      </div>
+      <div class="row" id="score-ctrl" hidden>
+        <button id="rec" class="primary" disabled>기록하고 다음 (Enter)</button>
+        <button id="skip">건너뛰기</button>
       </div>
       <div class="section-title">참여할 모델</div>
       <div class="chips" id="chips"></div>
@@ -86,6 +126,16 @@
         <span>모델이 실제로 보는 28×28 입력<br>글씨만 잘라 20px 에 맞추고 무게중심을 가운데로 옮깁니다 (MNIST 와 같은 방식)</span></div>
     </section>
     <section>
+      <div class="card score" id="scorecard" hidden>
+        <h3>내 손글씨 채점표 <span id="sc-n"></span></h3>
+        <p class="note" id="sc-note"></p>
+        <div id="sc-body"></div>
+        <div class="row">
+          <button id="sc-undo">마지막 기록 취소</button>
+          <button id="sc-export">결과 내려받기 (JSON)</button>
+          <button id="sc-reset">기록 모두 지우기</button>
+        </div>
+      </div>
       <div class="verdict" id="verdict"><div class="final" id="final">–</div><div class="msg" id="vmsg">숫자를 그리면 결과가 여기에 나옵니다.</div><div class="votes" id="votes">&nbsp;</div></div>
       <div class="models" id="models"></div>
       <footer id="foot"></footer>
@@ -95,13 +145,15 @@
 <script>
 const $ = id => document.getElementById(id);
 const pad = $('pad'), ctx = pad.getContext('2d');
-let MODELS = [], INFO = {}, MEMBERS = [], drawing = false, dirty = false, busy = false, cfg = { review_threshold: 0.7, min_agreement: 0.66 };
+let MODELS = [], INFO = {}, MEMBERS = [], ENS = null, drawing = false, dirty = false, busy = false, cfg = { review_threshold: 0.7, min_agreement: 0.66 };
+let MODE = 'free', target = null, bag = [], last = null, REC = [];   // 채점 모드 상태
 
 function resetPad(){ ctx.fillStyle = '#000'; ctx.fillRect(0, 0, pad.width, pad.height);
   ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 18; }
 resetPad();
 function pos(e){ const r = pad.getBoundingClientRect(); return [(e.clientX - r.left) * pad.width / r.width, (e.clientY - r.top) * pad.height / r.height]; }
 pad.addEventListener('pointerdown', e => { drawing = true; dirty = true; pad.setPointerCapture(e.pointerId);
+  if (MODE === 'score') { last = null; $('rec').disabled = true; $('thit').textContent = ''; }   // 고쳐 그리는 중엔 이전 결과를 기록하지 않음
   const [x, y] = pos(e); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 0.1, y); ctx.stroke(); });
 pad.addEventListener('pointermove', e => { if (!drawing) return; const [x, y] = pos(e); ctx.lineTo(x, y); ctx.stroke(); });
 ['pointerup', 'pointercancel'].forEach(t => pad.addEventListener(t, () => { if (!drawing) return; drawing = false; if ($('auto').checked) predict(); }));
@@ -123,7 +175,8 @@ function setVerdict(cls, final, msg, votes){ $('verdict').className = 'verdict '
 function clearCard(id){ $('pred-' + id).textContent = '–'; $('conf-' + id).innerHTML = '&nbsp;'; $('dis-' + id).textContent = '';
   for (let i = 0; i < 10; i++) { $(`f-${id}-${i}`).style.width = '0'; $(`p-${id}-${i}`).textContent = '0.0%'; $(`row-${id}-${i}`).classList.remove('top'); } }
 function clearAll(){ resetPad(); dirty = false; $('prev').hidden = true; $('ph').hidden = false; MODELS.forEach(clearCard);
-  setVerdict('', '–', '숫자를 그리면 결과가 여기에 나옵니다.'); $('foot').textContent = ''; }
+  setVerdict('', '–', '숫자를 그리면 결과가 여기에 나옵니다.'); $('foot').textContent = '';
+  last = null; $('rec').disabled = true; $('thit').textContent = ''; }
 $('clear').onclick = clearAll;
 $('go').onclick = predict;
 $('apikey').addEventListener('change', () => { try { localStorage.setItem('mnist_api_key', $('apikey').value); } catch (e) {} });
@@ -132,7 +185,7 @@ const MESSAGES = { 401: '🔑 API 키를 확인해 주세요.', 429: '⏳ 요청
 
 async function predict(){
   if (!dirty || busy) return;
-  const models = selected();
+  const models = MODE === 'score' ? MODELS : selected();   // 채점은 모델별 정확도를 비교하므로 항상 전부
   if (!models.length) { setVerdict('err', '–', '참여할 모델을 하나 이상 고르세요.'); return; }
   busy = true;
   try {
@@ -159,6 +212,9 @@ async function predict(){
     else if (e.agreement < cfg.min_agreement) setVerdict('warn', e.pred, `⚠️ 투표 모델의 의견이 갈렸습니다 (${n}개 중 ${agreeN}개만 동의). 사람이 확인할 대상입니다.`, votes);
     else setVerdict('warn', e.pred, `⚠️ 평균 확률이 ${(cfg.review_threshold * 100).toFixed(0)}% 미만입니다. 사람이 확인할 대상입니다.`, votes);
     $('foot').textContent = `요청 ID ${d.request_id} · 사용자 ${d.user} · 형식 ${d.backend} · 모델 버전 ${d.model_version} · 서버 처리 ${r.headers.get('X-Process-Time-ms')}ms`;
+    if (MODE === 'score') { last = d; $('rec').disabled = false;
+      const hit = e.pred === target; $('thit').className = 'hit ' + (hit ? 'ok' : 'no');
+      $('thit').textContent = `최종 답 ${e.pred} · ${hit ? '맞힘' : '틀림'}${d.needs_review ? ' · 확인 필요' : ''}`; }
   } catch (err) { setVerdict('err', '!', '🔌 서버에 연결할 수 없습니다.'); }
   finally { busy = false; }
 }
@@ -166,9 +222,106 @@ async function predict(){
 (async () => {
   let saved = null; try { saved = localStorage.getItem('mnist_api_key'); } catch (e) {}
   try { cfg = await (await fetch('/ui-config')).json(); $('apikey').value = saved || cfg.demo_key || ''; } catch (e) { $('apikey').value = saved || ''; }
-  try { const m = await (await fetch('/v1/models')).json(); MODELS = m.enabled; INFO = m.models; MEMBERS = m.ensemble_members || []; buildModels(); }
+  try { const m = await (await fetch('/v1/models')).json(); MODELS = m.enabled; INFO = m.models; MEMBERS = m.ensemble_members || []; ENS = m.ensemble; buildModels(); }
   catch (e) { setVerdict('err', '!', '🔌 모델 목록을 가져오지 못했습니다.'); }
+  REC = loadRecords();
+  if (location.hash === '#score') setMode('score');
 })();
+
+// ===== 내 손글씨 채점 =====
+// 화면이 낸 숫자를 그리고 '기록'하면, 정답과 모델별 답이 이 브라우저(localStorage)에 쌓입니다. 서버에는 저장하지 않습니다.
+const STORE = 'mnist_my_records_v1';
+const pct = (a, b) => b ? (100 * a / b).toFixed(1) + '%' : '–';
+function loadRecords(){ try { return JSON.parse(localStorage.getItem(STORE)) || []; } catch (e) { return []; } }
+function saveRecords(){ try { localStorage.setItem(STORE, JSON.stringify(REC)); } catch (e) {} }
+
+function setMode(mode){
+  MODE = mode; const s = mode === 'score';
+  $('m-free').classList.toggle('on', !s); $('m-score').classList.toggle('on', s);
+  $('target').hidden = $('score-ctrl').hidden = $('scorecard').hidden = !s;
+  $('chips').classList.toggle('locked', s);
+  if (s) { document.querySelectorAll('#chips input').forEach(x => x.checked = true); MODELS.forEach(id => $('card-' + id).classList.remove('off')); }
+  history.replaceState(null, '', s ? '#score' : location.pathname);
+  clearAll(); if (s) { if (target === null) nextTarget(); renderScore(); }
+}
+$('m-free').onclick = () => setMode('free');
+$('m-score').onclick = () => setMode('score');
+
+function nextTarget(){   // 0~9 를 섞어 하나씩 꺼냅니다. 10장마다 모든 숫자가 한 번씩 나와 숫자별 개수가 고르게 됩니다
+  if (!bag.length) { bag = [0,1,2,3,4,5,6,7,8,9]; for (let i = 9; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [bag[i], bag[j]] = [bag[j], bag[i]]; } }
+  target = bag.pop(); $('tdigit').textContent = target;
+}
+function record(){
+  if (!last || MODE !== 'score') return;
+  const preds = {}, conf = {};
+  for (const [k, v] of Object.entries(last.results)) { preds[k] = v.pred; conf[k] = +v.confidence.toFixed(4); }
+  REC.push({ label: target, ensemble: last.ensemble.pred, needs_review: last.needs_review, preds, conf,
+             img: last.preview, model_version: last.model_version, t: Date.now() });
+  saveRecords(); clearAll(); nextTarget(); renderScore();
+}
+$('rec').onclick = record;
+$('skip').onclick = () => { clearAll(); nextTarget(); };
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && MODE === 'score' && !$('rec').disabled) { e.preventDefault(); record(); } });
+$('sc-undo').onclick = () => { if (REC.length) { REC.pop(); saveRecords(); renderScore(); } };
+$('sc-reset').onclick = () => { if (REC.length && confirm(`기록 ${REC.length}장을 모두 지울까요?`)) { REC = []; saveRecords(); renderScore(); } };
+
+function renderScore(){
+  const n = REC.length;
+  $('sc-n').textContent = n ? `${n}장` : '';
+  if (!n) { $('sc-note').textContent = '왼쪽에 나온 숫자를 그리고 "기록하고 다음"을 누르세요. 10장마다 0~9 가 한 번씩 나옵니다. 기록은 이 브라우저에만 저장됩니다.';
+    $('sc-body').innerHTML = ''; return; }
+  $('sc-note').textContent = n < 30 ? `아직 ${n}장이라 한 장마다 정확도가 ${(100 / n).toFixed(1)}%p 씩 움직입니다. 30장 이상 모아야 모델 간 비교가 의미 있습니다.`
+                                    : 'MNIST 테스트 정확도와 비교해, 실제 사람 글씨에서 어느 모델이 얼마나 떨어지는지 봅니다.';
+  const ok = (r, k) => (k === 'ensemble' ? r.ensemble : r.preds[k]) === r.label;
+  const used = MODELS.filter(k => REC.some(r => k in r.preds));
+  const row = (k, name, color, mnist, cls) => {
+    const c = REC.filter(r => ok(r, k)).length, my = c / n, gap = mnist != null ? (my - mnist) * 100 : null;
+    return `<tr class="${cls}"><td>${name}</td><td><span class="mini"><i style="width:${my * 100}%;background:${color}"></i></span>${pct(c, n)}</td>
+      <td>${mnist != null ? (mnist * 100).toFixed(2) + '%' : '–'}</td><td class="${gap == null ? '' : gap < 0 ? 'down' : 'up'}">${gap == null ? '–' : (gap > 0 ? '+' : '') + gap.toFixed(1) + '%p'}</td></tr>`; };
+  let rows = row('ensemble', '앙상블 (' + MEMBERS.map(k => INFO[k]?.name || k).join('·') + ')', 'var(--ink)', ENS?.test_acc, 'ens');
+  for (const k of used) rows += row(k, INFO[k].name + (MEMBERS.includes(k) ? '' : ' <small>(참고)</small>'), INFO[k].color, INFO[k].test_acc, '');
+
+  // 서비스 관점 : '확인 필요' 규칙이 실제 사람 글씨에서 제 역할을 하는지
+  const auto = REC.filter(r => !r.needs_review), wrong = REC.filter(r => r.ensemble !== r.label);
+  const autoOk = auto.filter(r => r.ensemble === r.label).length, caught = wrong.filter(r => r.needs_review).length;
+  const kpis = `<div class="kpis">
+    <div class="kpi">자동 처리 비율<b>${pct(auto.length, n)}</b>${auto.length}장은 사람 확인 없이 통과</div>
+    <div class="kpi">자동 처리한 것의 정답률<b>${pct(autoOk, auto.length)}</b>통과시킨 답이 맞은 비율</div>
+    <div class="kpi">틀린 답을 걸러 낸 비율<b>${pct(caught, wrong.length)}</b>최종 답이 틀린 ${wrong.length}장 중 '확인 필요'로 잡힌 수</div></div>`;
+
+  let digits = '';
+  for (let d = 0; d < 10; d++) { const rs = REC.filter(r => r.label === d), c = rs.filter(r => r.ensemble === d).length;
+    digits += `<div class="${rs.length && c < rs.length ? 'weak' : ''}" title="숫자 ${d} : 앙상블 ${c}/${rs.length}">${d}<b>${rs.length ? c + '/' + rs.length : '–'}</b></div>`; }
+
+  const misses = REC.map((r, i) => [r, i]).filter(([r]) => r.ensemble !== r.label).reverse().slice(0, 40);
+  const gallery = misses.length ? misses.map(([r, i]) => {
+      const bad = MODELS.filter(k => k in r.preds && r.preds[k] !== r.label).map(k => INFO[k].name).join(', ');
+      return `<figure title="#${i + 1} · 틀린 모델 : ${bad}"><img src="${r.img}" alt="정답 ${r.label}, 최종 답 ${r.ensemble}">${r.label} → ${r.ensemble}${r.needs_review ? ' <span class="flag">⚠</span>' : ''}</figure>`; }).join('')
+    : '<span class="note">앙상블이 틀린 그림이 아직 없습니다.</span>';
+
+  $('sc-body').innerHTML = `<table><thead><tr><th>모델</th><th>내 손글씨</th><th>MNIST 테스트</th><th>차이</th></tr></thead><tbody>${rows}</tbody></table>
+    ${kpis}<div class="section-title">숫자별 앙상블 정답 (맞힘/그린 수)</div><div class="digits">${digits}</div>
+    <div class="section-title">앙상블이 틀린 그림 (정답 → 최종 답, ⚠ = 확인 필요로 걸러짐)</div><div class="gallery">${gallery}</div>`;
+}
+
+// 내려받기 : 모델이 실제로 본 28×28 픽셀(0~255)과 정답·모델별 답. scripts/score_my_digits.py 로 다시 채점하거나 학습에 쓸 수 있습니다
+async function toPixels(src){
+  const img = new Image(); img.src = src; await img.decode();
+  const c = document.createElement('canvas'); c.width = c.height = 28; const g = c.getContext('2d');
+  g.imageSmoothingEnabled = false; g.drawImage(img, 0, 0, 28, 28);
+  const d = g.getImageData(0, 0, 28, 28).data, px = new Array(784);
+  for (let i = 0; i < 784; i++) px[i] = d[i * 4];
+  return px;
+}
+$('sc-export').onclick = async () => {
+  if (!REC.length) return;
+  const records = [];
+  for (const r of REC) { const { img, ...rest } = r; records.push({ ...rest, pixels: await toPixels(img) }); }
+  const out = { format: 'mnist-my-digits/1', exported_at: new Date().toISOString(), ensemble_members: MEMBERS, n: records.length, records };
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(out)], { type: 'application/json' }));
+  a.download = `my_digits_${new Date().toISOString().slice(0, 10)}.json`; a.click(); URL.revokeObjectURL(a.href);
+};
 </script>
 </body>
 </html>
