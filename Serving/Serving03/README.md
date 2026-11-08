@@ -28,7 +28,7 @@ flowchart TB
             direction LR
             V["입력 검증<br/>범위 밖 → 422"] --> P["정규화 → 추론<br/>별도 스레드"]
         end
-        P --> M[("models/<br/>가중치 + 정규화 통계")]
+        A --> M[("models/<br/>가중치 + 정규화 통계")]
     end
     flow ~~~ pad["<br/><br/><br/><br/><br/>"]
     style flow fill:none,stroke:none
