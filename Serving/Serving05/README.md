@@ -17,14 +17,18 @@
 ## 2. 구조
 
 ```mermaid
-flowchart LR
-    U["👤 사용자"] --> S["🖥️ Streamlit<br/>session_state 에 대화 기록"]
-    S -->|"대화 전체 + X-API-Key"| A["① 인증<br/>없거나 틀리면 401"]
-    A --> V["② 검증<br/>빈 대화 · temperature 범위 밖 → 422"]
-    V --> G["③ 프롬프트 조립 → 생성<br/>스레드풀 2개"]
-    G --> M[("🤗 kogpt2-base-v2")]
-    %% 오른쪽 아래 확대·이동 버튼이 그림을 가리지 않게 비워 두는 자리
-    M ~~~ pad["　　　　　　　　　"]
+flowchart TB
+    %% 가로 흐름을 투명한 상자에 담고, 아래에 빈 줄을 두어 GitHub 의 확대·이동 버튼이 그림을 가리지 않게 합니다
+    subgraph flow[" "]
+        direction LR
+        U["👤 사용자"] --> S["🖥️ Streamlit<br/>session_state 에 대화 기록"]
+        S -->|"대화 전체 + X-API-Key"| A["① 인증<br/>없거나 틀리면 401"]
+        A --> V["② 검증<br/>빈 대화 · temperature 범위 밖 → 422"]
+        V --> G["③ 프롬프트 조립 → 생성<br/>스레드풀 2개"]
+        G --> M[("🤗 kogpt2-base-v2")]
+    end
+    flow ~~~ pad["<br/><br/><br/><br/><br/>"]
+    style flow fill:none,stroke:none
     style pad fill:none,stroke:none
 ```
 

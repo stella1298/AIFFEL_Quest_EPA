@@ -21,15 +21,19 @@
 ## 2. 요청 흐름
 
 ```mermaid
-flowchart LR
-    U["👤 직원"] --> S["🖥️ Streamlit"]
-    S -->|"X-API-Key"| A["① 인증<br/>키 → 사용자 · 부서<br/>없거나 틀리면 401"]
-    A --> V["② 검증<br/>빈 질문 · 500자 초과 → 422"]
-    V --> R["③ 부서 필터 → 검색<br/>볼 수 없는 문서는 후보에서 제외"]
-    R --> G["④ 생성 (동시 2건)<br/>토큰 · 시간 예산, 이탈 감지"]
-    G -->|"SSE"| S
-    %% 오른쪽 아래 확대·이동 버튼이 그림을 가리지 않게 비워 두는 자리
-    G ~~~ pad["　　　　　　　　　"]
+flowchart TB
+    %% 가로 흐름을 투명한 상자에 담고, 아래에 빈 줄을 두어 GitHub 의 확대·이동 버튼이 그림을 가리지 않게 합니다
+    subgraph flow[" "]
+        direction LR
+        U["👤 직원"] --> S["🖥️ Streamlit"]
+        S -->|"X-API-Key"| A["① 인증<br/>키 → 사용자 · 부서<br/>없거나 틀리면 401"]
+        A --> V["② 검증<br/>빈 질문 · 500자 초과 → 422"]
+        V --> R["③ 부서 필터 → 검색<br/>볼 수 없는 문서는 후보에서 제외"]
+        R --> G["④ 생성 (동시 2건)<br/>토큰 · 시간 예산, 이탈 감지"]
+        G -->|"SSE"| S
+    end
+    flow ~~~ pad["<br/><br/><br/><br/><br/>"]
+    style flow fill:none,stroke:none
     style pad fill:none,stroke:none
 ```
 

@@ -18,16 +18,20 @@
 ## 2. 구조
 
 ```mermaid
-flowchart LR
-    U["👤 사용자"] --> S["🖥️ Streamlit<br/>app_housing.py"]
-    S -->|"JSON"| A
-    subgraph A["⚙️ FastAPI · housing_api.py"]
+flowchart TB
+    %% 가로 흐름을 투명한 상자에 담고, 아래에 빈 줄을 두어 GitHub 의 확대·이동 버튼이 그림을 가리지 않게 합니다
+    subgraph flow[" "]
         direction LR
-        V["입력 검증<br/>범위 밖 → 422"] --> P["정규화 → 추론<br/>별도 스레드"]
+        U["👤 사용자"] --> S["🖥️ Streamlit<br/>app_housing.py"]
+        S -->|"JSON"| A
+        subgraph A["⚙️ FastAPI · housing_api.py"]
+            direction LR
+            V["입력 검증<br/>범위 밖 → 422"] --> P["정규화 → 추론<br/>별도 스레드"]
+        end
+        P --> M[("models/<br/>가중치 + 정규화 통계")]
     end
-    P --> M[("models/<br/>가중치 + 정규화 통계")]
-    %% 오른쪽 아래 확대·이동 버튼이 그림을 가리지 않게 비워 두는 자리
-    M ~~~ pad["　　　　　　　　　"]
+    flow ~~~ pad["<br/><br/><br/><br/><br/>"]
+    style flow fill:none,stroke:none
     style pad fill:none,stroke:none
 ```
 
