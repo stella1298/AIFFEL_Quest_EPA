@@ -32,6 +32,12 @@ AIFFEL_Quest_EPA
 └── Serving             # 모델 서빙(FastAPI · Streamlit) 모듈의 퀘스트
     ├── Serving01       # 뉴스 섹션 자동 분류 API (D52 자율 프로젝트)
     │   └── README.md
-    └── Serving02       # MNIST 손글씨 인식 — 모델 6개 비교 + 앙상블 서빙
+    ├── Serving02       # MNIST 손글씨 인식 — 모델 6개 비교 + 앙상블 서빙
+    │   └── README.md
+    ├── Serving03       # 캘리포니아 집값 예측 API — PyTorch MLP 회귀 서빙
+    │   └── README.md
+    ├── Serving04       # 사내 문서 질의응답 — 부서별 열람 권한 · 스트리밍 · 용량 산정
+    │   └── README.md
+    └── Serving05       # 트랜스포머(GPT) 한국어 챗봇 — 멀티턴 · API Key 인증
         └── README.md
 ```
