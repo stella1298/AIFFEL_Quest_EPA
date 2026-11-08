@@ -1,0 +1,7 @@
+fastapi>=0.141,<0.142
+uvicorn[standard]>=0.53,<0.54
+starlette>=1.6,<2
+pydantic>=2.13,<3
+anyio>=4.15,<5
+httpx>=0.28,<1
+streamlit>=1.64,<2
