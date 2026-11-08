@@ -23,6 +23,9 @@ flowchart LR
     A --> V["② 검증<br/>빈 대화 · temperature 범위 밖 → 422"]
     V --> G["③ 프롬프트 조립 → 생성<br/>스레드풀 2개"]
     G --> M[("🤗 kogpt2-base-v2")]
+    %% 오른쪽 아래 확대·이동 버튼이 그림을 가리지 않게 비워 두는 자리
+    M ~~~ pad["　　　　　　　　　"]
+    style pad fill:none,stroke:none
 ```
 
 | 파일 | 역할 |

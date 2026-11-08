@@ -132,6 +132,9 @@ flowchart LR
         direction LR
         M["미들웨어<br/>요청 ID·로그"] --> A["인증<br/>401"] --> R["속도 제한<br/>429"] --> V["검증<br/>422"] --> I["이미지 검사<br/>400·413·415"] --> Q["동시 처리 제한<br/>503"] --> P["스레드풀<br/>ONNX Runtime<br/>모델 6개"] --> E["앙상블<br/>확률 평균"]
     end
+    %% 오른쪽 아래 확대·이동 버튼이 그림을 가리지 않게 비워 두는 자리
+    API ~~~ pad["　　　　　　　　　"]
+    style pad fill:none,stroke:none
 ```
 
 ## 실행

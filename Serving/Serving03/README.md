@@ -26,6 +26,9 @@ flowchart LR
         V["입력 검증<br/>범위 밖 → 422"] --> P["정규화 → 추론<br/>별도 스레드"]
     end
     P --> M[("models/<br/>가중치 + 정규화 통계")]
+    %% 오른쪽 아래 확대·이동 버튼이 그림을 가리지 않게 비워 두는 자리
+    M ~~~ pad["　　　　　　　　　"]
+    style pad fill:none,stroke:none
 ```
 
 | 파일 | 역할 |
