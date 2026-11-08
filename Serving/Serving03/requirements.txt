@@ -1,0 +1,9 @@
+fastapi>=0.141,<0.142
+uvicorn[standard]>=0.53,<0.54
+pydantic>=2.13,<3
+torch>=2.4
+numpy
+scikit-learn>=1.9,<1.10
+joblib
+streamlit>=1.64,<2
+requests

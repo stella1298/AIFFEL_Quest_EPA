@@ -1,0 +1,17 @@
+{
+ "features": [
+  "MedInc",
+  "HouseAge",
+  "AveRooms",
+  "AveBedrms",
+  "Population",
+  "AveOccup",
+  "Latitude",
+  "Longitude"
+ ],
+ "target": "중위 주택 가격 (10만 달러 단위)",
+ "mae": 0.3666,
+ "학습 행 수": 16512,
+ "데이터 출처": "다운로드",
+ "sklearn": "1.9.1"
+}
