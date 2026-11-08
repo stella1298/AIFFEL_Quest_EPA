@@ -24,7 +24,8 @@ def _export(tmp_path, n=40):
 
 def test_ui_has_score_mode(client):
     html = client.get("/").text
-    for el in ('id="m-score"', 'id="rec"', 'id="sc-export"', "mnist-my-digits/1", 'id="mode-desc"'):
+    for el in ('id="m-score"', 'id="rec"', 'id="sc-export"', "mnist-my-digits/1", 'id="mode-desc"',
+               'id="legend"', "const BASE"):           # 투표/참고 설명 · 제작자 손글씨 49장 기준
         assert el in html
     # .row·.target 의 display:flex 가 hidden 속성을 덮어써 채점용 버튼이 '한 장씩 보기'에도 보이던 문제
     assert "[hidden] { display:none !important; }" in html

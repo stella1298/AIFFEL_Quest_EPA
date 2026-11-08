@@ -54,6 +54,11 @@
   .dissent { font-size:11px; font-weight:600; color:var(--warn); }
   .role { font-size:10px; font-weight:600; padding:1px 6px; border-radius:999px; border:1px solid currentColor; margin-left:6px; vertical-align:middle; }
   .role.vote { color:var(--ink); } .role.ref { color:var(--muted); font-weight:400; }
+  .legend { font-size:12px; color:var(--muted); line-height:1.6; margin:0 0 10px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; }
+  .legend .role { margin:0 4px 0 0; }
+  .legend div + div { margin-top:4px; }
+  .grid > * { min-width:0; }          /* 표가 넓어도 칸이 화면 밖으로 밀려나지 않게 */
+  #sc-body { overflow-x:auto; }
   .bar { display:grid; grid-template-columns:10px 1fr 40px; gap:5px; align-items:center; font-size:11px; margin:2px 0; font-variant-numeric:tabular-nums; }
   .bar .track { background:var(--track); height:7px; border-radius:4px; overflow:hidden; }
   .bar .fill { height:100%; width:0; transition:width .2s; }
@@ -146,6 +151,7 @@
         <div class="sc-msg" id="sc-msg" role="status"></div>
       </div>
       <div class="verdict" id="verdict"><div class="final" id="final">–</div><div class="msg" id="vmsg">숫자를 그리면 결과가 여기에 나옵니다.</div><div class="votes" id="votes">&nbsp;</div></div>
+      <div class="legend" id="legend"></div>
       <div class="models" id="models"></div>
       <footer id="foot"></footer>
     </section>
@@ -160,6 +166,11 @@ const REC_IDLE = '숫자를 그리면 예측 결과가 나온 뒤 기록할 수 
 const MODE_DESC = {
   free:  '숫자(0~9)를 아무거나 하나 그리면 여섯 모델이 각각 어떻게 판단했는지 자세히 보여 줍니다. 정답을 모르므로 기록은 남지 않습니다.',
   score: '화면이 정한 숫자를 그리고 "기록하고 다음"을 누르세요. 화면이 정답을 알고 있어서, 모아 두면 모델별로 내 손글씨를 몇 % 맞히는지 채점됩니다.' };
+// 제작자가 이 채점 모드로 직접 그린 49장(0~8 각 5장, 9 는 4장, 2026-11-08)의 결과. 내 기록과 비교하는 기준으로 보여 줍니다.
+const BASE = { n: 49, label: '제작자 손글씨 49장',
+  acc: { ensemble: 47, lenet: 47, cnn: 46, lstm: 45, mlp: 43, vit: 42, logreg: 34 },
+  auto: 45, autoOk: 45, wrong: 2, caught: 2 };
+const basePct = k => BASE.acc[k] != null ? (BASE.acc[k] / BASE.n * 100).toFixed(1) + '%' : '–';
 
 function resetPad(){ ctx.fillStyle = '#000'; ctx.fillRect(0, 0, pad.width, pad.height);
   ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 18; }
@@ -176,10 +187,14 @@ function buildModels(){
   for (const id of MODELS) { const m = INFO[id];
     chips.insertAdjacentHTML('beforeend', `<label class="chip"><input type="checkbox" data-model="${id}" checked><i style="background:${m.color}"></i>${m.name}</label>`);
     let bars = ''; for (let i = 0; i < 10; i++) bars += `<div class="bar" id="row-${id}-${i}"><b>${i}</b><div class="track"><div class="fill" id="f-${id}-${i}" style="background:${m.color}"></div></div><span id="p-${id}-${i}">0.0%</span></div>`;
-    const acc = m.test_acc != null ? `테스트 ${(m.test_acc * 100).toFixed(2)}% · 4px 이동 ${(m.shift4px_acc * 100).toFixed(1)}% · 파라미터 ${m.params.toLocaleString()}` : '';
+    const acc = (m.test_acc != null ? `테스트 ${(m.test_acc * 100).toFixed(2)}% · 4px 이동 ${(m.shift4px_acc * 100).toFixed(1)}% · 파라미터 ${m.params.toLocaleString()}` : '')
+      + (BASE.acc[id] != null ? `<br>${BASE.label} ${basePct(id)}` : '');
     box.insertAdjacentHTML('beforeend', `<div class="card model" id="card-${id}" title="${m.description}">
       <h2 style="color:${m.color}"><div>${m.name}${MEMBERS.includes(id) ? '<span class="role vote" title="최종 답 투표에 참여">투표</span>' : '<span class="role ref" title="결과만 함께 보여 줌">참고</span>'}</div><span>${m.family}</span></h2><div class="meta">${acc}</div>
       <div class="head"><div class="big" id="pred-${id}">–</div><div><div class="conf" id="conf-${id}">&nbsp;</div><div class="dissent" id="dis-${id}"></div></div></div>${bars}</div>`); }
+  const names = ids => ids.map(k => INFO[k]?.name || k).join(' · ');
+  $('legend').innerHTML = `<div><span class="role vote">투표</span><b>${names(MEMBERS)}</b> : 가능한 조합 63가지를 모두 채점해 가장 정확했던 셋입니다. 이 셋의 확률 평균이 최종 답이 되고, '확인 필요'도 이 셋으로만 판단합니다.</div>
+    <div><span class="role ref">참고</span><b>${names(MODELS.filter(k => !MEMBERS.includes(k)))}</b> : 여섯 개를 다 섞으면 오히려 정확도가 떨어져(98.87%, CNN 혼자 99.01%) 최종 답에는 넣지 않습니다. 모델마다 어떻게 다르게 보는지 비교하도록 결과만 함께 보여 줍니다.</div>`;
   chips.addEventListener('change', () => { for (const id of MODELS) $('card-' + id).classList.toggle('off', !selected().includes(id)); if (dirty) predict(); });
 }
 const selected = () => [...document.querySelectorAll('#chips input:checked')].map(x => x.dataset.model);
@@ -295,8 +310,16 @@ function renderScore(){
   const n = REC.length;
   $('sc-n').textContent = n ? `${n}장` : '';
   for (const id of ['sc-undo', 'sc-export', 'sc-reset']) { $(id).disabled = !n; $(id).title = n ? '' : '아직 기록이 없습니다. 먼저 숫자를 그리고 "기록하고 다음"을 누르세요.'; }
-  if (!n) { $('sc-note').textContent = '왼쪽에 나온 숫자를 그리고 "기록하고 다음"을 누르세요. 10장마다 0~9 가 한 번씩 나옵니다. 기록은 이 브라우저에만 저장됩니다.';
-    $('sc-body').innerHTML = ''; return; }
+  if (!n) { $('sc-note').textContent = '왼쪽에 나온 숫자를 그리고 "기록하고 다음"을 누르세요. 10장마다 0~9 가 한 번씩 나옵니다. 기록은 이 브라우저에만 저장됩니다. 아래는 비교 기준으로, 제작자가 이 모드로 직접 그린 49장의 결과입니다.';
+    const keys = ['ensemble', ...MODELS.filter(k => BASE.acc[k] != null).sort((a, b) => BASE.acc[b] - BASE.acc[a])];
+    const brow = k => { const mn = k === 'ensemble' ? ENS?.test_acc : INFO[k]?.test_acc, g = mn != null ? BASE.acc[k] / BASE.n * 100 - mn * 100 : null;
+      const nm = k === 'ensemble' ? '앙상블 (' + MEMBERS.map(x => INFO[x]?.name || x).join('·') + ')' : INFO[k].name + (MEMBERS.includes(k) ? '' : ' <small>(참고)</small>');
+      return `<tr class="${k === 'ensemble' ? 'ens' : ''}"><td>${nm}</td><td>${basePct(k)}</td><td>${mn != null ? (mn * 100).toFixed(2) + '%' : '–'}</td><td class="${g == null ? '' : g < 0 ? 'down' : 'up'}">${g == null ? '–' : (g > 0 ? '+' : '') + g.toFixed(1) + '%p'}</td></tr>`; };
+    $('sc-body').innerHTML = `<table><thead><tr><th>모델</th><th title="${BASE.label}">제작자 49장</th><th>MNIST 테스트</th><th>차이</th></tr></thead><tbody>${keys.map(brow).join('')}</tbody></table>
+      <div class="kpis"><div class="kpi">자동 처리 비율<b>${pct(BASE.auto, BASE.n)}</b>${BASE.auto}장은 사람 확인 없이 통과</div>
+      <div class="kpi">자동 처리한 것의 정답률<b>${pct(BASE.autoOk, BASE.auto)}</b>통과시킨 답이 맞은 비율</div>
+      <div class="kpi">틀린 답을 걸러 낸 비율<b>${pct(BASE.caught, BASE.wrong)}</b>최종 답이 틀린 ${BASE.wrong}장 중 '확인 필요'로 잡힌 수</div></div>`;
+    return; }
   $('sc-note').textContent = n < 30 ? `아직 ${n}장이라 한 장마다 정확도가 ${(100 / n).toFixed(1)}%p 씩 움직입니다. 30장 이상 모아야 모델 간 비교가 의미 있습니다.`
                                     : 'MNIST 테스트 정확도와 비교해, 실제 사람 글씨에서 어느 모델이 얼마나 떨어지는지 봅니다.';
   const ok = (r, k) => (k === 'ensemble' ? r.ensemble : r.preds[k]) === r.label;
@@ -304,7 +327,7 @@ function renderScore(){
   const row = (k, name, color, mnist, cls) => {
     const c = REC.filter(r => ok(r, k)).length, my = c / n, gap = mnist != null ? (my - mnist) * 100 : null;
     return `<tr class="${cls}"><td>${name}</td><td><span class="mini"><i style="width:${my * 100}%;background:${color}"></i></span>${pct(c, n)}</td>
-      <td>${mnist != null ? (mnist * 100).toFixed(2) + '%' : '–'}</td><td class="${gap == null ? '' : gap < 0 ? 'down' : 'up'}">${gap == null ? '–' : (gap > 0 ? '+' : '') + gap.toFixed(1) + '%p'}</td></tr>`; };
+      <td>${basePct(k)}</td><td>${mnist != null ? (mnist * 100).toFixed(2) + '%' : '–'}</td><td class="${gap == null ? '' : gap < 0 ? 'down' : 'up'}">${gap == null ? '–' : (gap > 0 ? '+' : '') + gap.toFixed(1) + '%p'}</td></tr>`; };
   let rows = row('ensemble', '앙상블 (' + MEMBERS.map(k => INFO[k]?.name || k).join('·') + ')', 'var(--ink)', ENS?.test_acc, 'ens');
   for (const k of used) rows += row(k, INFO[k].name + (MEMBERS.includes(k) ? '' : ' <small>(참고)</small>'), INFO[k].color, INFO[k].test_acc, '');
 
@@ -326,7 +349,7 @@ function renderScore(){
       return `<figure title="#${i + 1} · 틀린 모델 : ${bad}"><img src="${r.img}" alt="정답 ${r.label}, 최종 답 ${r.ensemble}">${r.label} → ${r.ensemble}${r.needs_review ? ' <span class="flag">⚠</span>' : ''}</figure>`; }).join('')
     : '<span class="note">앙상블이 틀린 그림이 아직 없습니다.</span>';
 
-  $('sc-body').innerHTML = `<table><thead><tr><th>모델</th><th>내 손글씨</th><th>MNIST 테스트</th><th>차이</th></tr></thead><tbody>${rows}</tbody></table>
+  $('sc-body').innerHTML = `<table><thead><tr><th>모델</th><th>내 손글씨</th><th title="제작자가 직접 그린 49장">제작자 49장</th><th>MNIST 테스트</th><th>차이</th></tr></thead><tbody>${rows}</tbody></table>
     ${kpis}<div class="section-title">숫자별 앙상블 정답 (맞힘/그린 수)</div><div class="digits">${digits}</div>
     <div class="section-title">앙상블이 틀린 그림 (정답 → 최종 답, ⚠ = 확인 필요로 걸러짐)</div><div class="gallery">${gallery}</div>`;
 }
